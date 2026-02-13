@@ -2,6 +2,22 @@ import { fail } from '../utils/response.js';
 import { AppError } from '../utils/appError.js';
 
 export function errorHandler(err, req, res, next) {
+
+    // ✅ Map duplicate key (E11000) -> 409
+    if (err?.code === 11000) {
+        const fields = Object.keys(err.keyValue || {});
+        const field = fields[0] || 'field';
+        return fail(res, 409, 'DUPLICATE_KEY', `${field} already exists`, err.keyValue || null);
+    }
+
+    // ✅ Map mongoose validation error -> 400
+    if (err?.name === 'ValidationError') {
+        const details = Object.fromEntries(
+        Object.entries(err.errors || {}).map(([k, v]) => [k, v.message])
+        );
+        return fail(res, 400, 'VALIDATION_ERROR', 'Validation failed', details);
+    }
+
     const isAppError = err instanceof AppError;
 
     const statusCode = isAppError ? err.statusCode : 500;
