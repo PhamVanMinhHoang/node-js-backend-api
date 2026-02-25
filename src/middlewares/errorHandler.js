@@ -1,7 +1,16 @@
 import { fail } from '../utils/response.js';
 import { AppError } from '../utils/appError.js';
+import { ZodError } from 'zod';
 
 export function errorHandler(err, req, res, next) {
+    // ✅ Zod validation -> 400
+    if (err instanceof ZodError) {
+        const details = err.issues.map((i) => ({
+            path: i.path.join('.'),
+            message: i.message
+        }));
+        return fail(res, 400, 'VALIDATION_ERROR', 'Validation failed', details);
+    }
 
     // ✅ Map duplicate key (E11000) -> 409
     if (err?.code === 11000) {

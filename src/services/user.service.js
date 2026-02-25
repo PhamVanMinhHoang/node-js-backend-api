@@ -75,7 +75,7 @@ export async function updateUserByIdService(id, payload) {
 
     if(payload.email) {
         const exists = await findUserByEmail(payload.email);
-        if(exists && String(exists._id !== String(id))) {
+        if(exists && String(exists._id) !== String(id)) {
             throw new AppError('Email already exists', 409, 'EMAIL_EXISTS');
         }
     }
