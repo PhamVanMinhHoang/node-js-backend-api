@@ -31,7 +31,10 @@ export const updateUserBodySchema = z
 export const listUsersQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(10),
-  search: z.string().trim().min(1, 'search must not be empty').max(100, 'search too long').optional()
+  search: z.string().trim().min(1, 'search must not be empty').max(100, 'search too long').optional(),
+  role: z.enum(['user', 'admin']).optional(),
+  sort: z.enum(['createdAt', 'email', 'name']).default('createdAt'),
+  order: z.enum(['asc', 'desc']).default('desc')
 });
 
 export const userIdParamsSchema = z.object({

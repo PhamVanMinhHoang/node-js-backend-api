@@ -42,30 +42,48 @@ export async function findUserByIdService(id) {
     return toPublicUser(user);
 }
 
-export async function listUsersService({ page = 1, limit = 10, sort = '' }) {
+export async function listUsersService({ page = 1, limit = 10, search, role, sort, order }) {
     const p = Number(page);
     const l = Number(limit);
-    const s = String(sort);    
 
     if (!Number.isFinite(p) || p < 1) throw new AppError('Invalid page', 400, 'INVALID_PAGE');
     if (!Number.isFinite(l) || l < 1 || l > 100) throw new AppError('Invalid limit', 400, 'INVALID_LIMIT');
-    if (s) {
-        if (s !== 'createdAt' || s !== 'email') {
-            throw new AppError('Invalid sort', 400, 'INVALID_SORT')
-        }
-    }
 
     const skip = (p - 1) * l;
     
-    const { items, total } = await listUsers({ skip, limit: l });
+    // ✅ Filter do server build
+    const filter = {};
+
+    if (role) {
+        filter.role = role;
+    }
+
+    if (search) {
+        // Escape regex để tránh user nhập ký tự regex gây nặng query
+        const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        filter.$or = [
+            { email: { $regex: escaped, $options: 'i' } },
+            { name: { $regex: escaped, $options: 'i' } }
+        ];
+    }
+
+    // ✅ Sort whitelist đã đảm bảo ở Zod
+    const dir = order === 'asc' ? 1 : -1;
+    const sortObj = { [sort]: dir, _id: -1 }; // tie-breaker ổn định    
+
+    const { items, total } = await listUsers({ filter, skip, limit: l, sort: sortObj });
 
     return {
         items: items.map(toPublicUser),
         meta: {
             page: p,
             limit: l,
-            total, 
-            totalPages: Math.ceil(total/l)
+            total,
+            totalPages: Math.ceil(total / l),
+            sort,
+            order,
+            ...(search ? { search } : {}),
+            ...(role ? { role } : {})
         }
     }
 }

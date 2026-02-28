@@ -14,10 +14,10 @@ export async function findUserById(id)
 {
     return User.findById(id)
 }
-export async function listUsers({skip, limit}) {
+export async function listUsers({filter, skip, limit, sort}) {
     const [items, total] = await Promise.all([
-        User.find().sort({createdAt: -1}).skip(skip).limit(limit),
-        User.countDocuments()
+        User.find(filter).sort({sort}).skip(skip).limit(limit),
+        User.countDocuments(filter)
     ])
 
     return {items, total}
