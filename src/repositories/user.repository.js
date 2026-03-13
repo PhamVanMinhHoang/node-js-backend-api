@@ -16,7 +16,7 @@ export async function findUserById(id)
 }
 export async function listUsers({filter, skip, limit, sort}) {
     const [items, total] = await Promise.all([
-        User.find(filter).sort({sort}).skip(skip).limit(limit),
+        User.find(filter).sort(sort).skip(skip).limit(limit),
         User.countDocuments(filter)
     ])
 
